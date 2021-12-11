@@ -12,7 +12,7 @@ import ControlFactory._
 object MainWindow extends App {
   EventQueue.invokeLater {
     val window = new MainWindow
-    window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
+    window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
     window.setSize(new Dimension(800, 800))
     window.setResizable(false)
     window.setVisible(true)
@@ -23,7 +23,7 @@ class MainWindow extends JFrame("Bezier Curve") {
   UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName)
   setLayout(new BorderLayout)
   val panel = new MainPanel
-  val precisionField = slider(SwingConstants.HORIZONTAL, 1, 5)(repaint())
+  val precisionField = slider(SwingConstants.HORIZONTAL, 1, 5, value=2)(repaint())
   precisionField.setEnabled(false)
   add(panel, BorderLayout.CENTER)
   add(precisionField, BorderLayout.SOUTH)
@@ -32,6 +32,7 @@ class MainWindow extends JFrame("Bezier Curve") {
     val points = Array[Point](null, null, null)
     var index = 0
     val r=10
+    
     override def paintComponent(g: Graphics) = {
       g.clearRect(0,0,getWidth,getHeight)
       0 to 2 foreach { i => val point = points(i)
@@ -41,13 +42,19 @@ class MainWindow extends JFrame("Bezier Curve") {
         }
       }
       if (precisionField.isEnabled) {
-        (0.0 to 1 by 10 ** -precisionField.getValue
-          map { t => t } // should balance the denser middle
-          foreach { t =>
+        val values = Stream.iterate(0.0) { t =>
+            val derivative = points(1)-points(0)+(points(0)/2 + points(2)/2 - points(1))*t*2
+            val bMinusA = points(1)-points(0)
+            val factor = (sqrt(derivative.x**2 + derivative.y**2) / sqrt(bMinusA.x**2 + bMinusA.y**2))
+            val next = t + (10 ** - precisionField.getValue) / factor
+            println(s"next=$next\tfactor=$factor")
+            next
+        }
+        values takeWhile(_ < 1) foreach { t =>
             val p = points(0)*((1-t)**2) + points(1)*(2*(1-t)*t) + points(2)*(t**2)
             //println(s"t=$t , a=${points(0)} , b=${points(1)} , c=${points(2)} , p=$p")
             g.fillOval(p.x, p.y, 5, 5)
-          })
+        }
       }
     }
 
