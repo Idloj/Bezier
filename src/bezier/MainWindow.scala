@@ -23,7 +23,7 @@ class MainWindow extends JFrame("Bezier Curve") {
   UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName)
   setLayout(new BorderLayout)
   val panel = new MainPanel
-  val precisionField = slider(SwingConstants.HORIZONTAL, 1, 5, value=2)(repaint())
+  val precisionField = slider(SwingConstants.HORIZONTAL, 1, 4, value=2)(repaint())
   precisionField.setEnabled(false)
   add(panel, BorderLayout.CENTER)
   add(precisionField, BorderLayout.SOUTH)
@@ -43,10 +43,9 @@ class MainWindow extends JFrame("Bezier Curve") {
       }
       if (precisionField.isEnabled) {
         val values = Stream.iterate(0.0) { t =>
-            val derivative = points(1)-points(0)+(points(0)/2 + points(2)/2 - points(1))*t*2
-            val bMinusA = points(1)-points(0)
-            val factor = (sqrt(derivative.x**2 + derivative.y**2) / sqrt(bMinusA.x**2 + bMinusA.y**2))
-            val next = t + (10 ** - precisionField.getValue) / factor
+            val derivative = (points(0) - points(1)*2 + points(2))*2*t + (points(1) - points(0))*2
+            val velocity = sqrt(derivative.x**2 + derivative.y ** 2)
+            val next = t + (1000 * (10 ** - precisionField.getValue)) / velocity
             println(s"next=$next\tfactor=$factor")
             next
         }
